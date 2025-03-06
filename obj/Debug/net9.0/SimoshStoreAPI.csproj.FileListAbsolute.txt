@@ -55,3 +55,10 @@
 /Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
 /Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/Microsoft.IdentityModel.Tokens.dll
 /Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/System.IdentityModel.Tokens.Jwt.dll
+/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/publish/web.config
+/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/publish/appsettings.Development.json
+/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/publish/appsettings.json
+/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/publish/SimoshStoreAPI.deps.json
+/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/publish/SimoshStoreAPI.runtimeconfig.json
+/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/bin/Debug/net9.0/publish/SimoshStoreAPI.staticwebassets.endpoints.json
+/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/obj/Debug/net9.0/SimoshStoreAPI.sourcelink.json
