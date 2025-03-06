@@ -40,7 +40,10 @@ public class ProductService : IProductService
     }
     public async Task<IEnumerable<ProductEntity>> GetProductsAsync()
     {
-        var products = await _Repository.GetAll<ProductEntity>().ToListAsync();
+        var products = await _Repository.GetAll<ProductEntity>().
+                            Include(P=>P.Category).
+                            Include(P=>P.Discount).
+                            Include(P=>P.Images).ToListAsync();
         if (products == null)
         {
             throw new Exception("No products found");

@@ -36,7 +36,10 @@ public class OrderService : IOrderService
     }
     public async Task<OrderEntity> GetOrderByIdAsync(int id)
     {
-        var order = await _Repository.GetByIdAsync<OrderEntity>(id);
+        var order = await _Repository.GetAll<OrderEntity>()
+                            .Include(o => o.User)
+                            .Include(o => o.OrderItems)
+                            .FirstOrDefaultAsync(o => o.Id == id);
         if (order is null)
         {
             throw new Exception("Order not found");
@@ -45,7 +48,10 @@ public class OrderService : IOrderService
     }
     public async Task<IEnumerable<OrderEntity>> GetOrdersAsync()
     {
-        var orders = await _Repository.GetAll<OrderEntity>().ToListAsync();
+        var orders = await _Repository.GetAll<OrderEntity>()
+                           .Include(o => o.User)
+                           .Include(o => o.OrderItems)
+                           .ToListAsync();
         if (orders == null)
         {
             throw new Exception("No orders found");

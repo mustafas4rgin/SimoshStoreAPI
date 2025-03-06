@@ -13,7 +13,9 @@ public class ProductImageService : IProductImageService
     }
     public async Task<ProductImageEntity> GetProductImageByIdAsync(int id)
     {
-        var productImage = await _Repository.GetByIdAsync<ProductImageEntity>(id);
+        var productImage = await _Repository.GetAll<ProductImageEntity>()
+                                .Include(i => i.Product)
+                                .FirstOrDefaultAsync(i => i.Id == id);
         if (productImage is null)
         {
             throw new Exception("Product image not found");
@@ -62,7 +64,9 @@ public class ProductImageService : IProductImageService
     }
     public async Task<IEnumerable<ProductImageEntity>> GetProductImages()
     {
-        var images = await _Repository.GetAll<ProductImageEntity>().ToListAsync();
+        var images = await _Repository.GetAll<ProductImageEntity>()
+                            .Include(i => i.Product)
+                            .ToListAsync();
         if (images == null)
         {
             throw new Exception("No images found");

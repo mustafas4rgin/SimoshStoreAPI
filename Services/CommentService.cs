@@ -15,7 +15,10 @@ public class CommentService : ICommentService
     }
     public async Task<IEnumerable<ProductCommentEntity>> GetProductComments()
     {
-        var comments = await _dataRepository.GetAll<ProductCommentEntity>().ToListAsync();
+        var comments = await _dataRepository.GetAll<ProductCommentEntity>()
+                            .Include(c => c.Product)
+                            .Include(c => c.User)
+                            .ToListAsync();
         if(comments is null)
         {
             throw new Exception("No comments found");
@@ -24,7 +27,10 @@ public class CommentService : ICommentService
     }
     public async Task<ProductCommentEntity> GetProductCommentById(int id)
     {
-        var comment = await _dataRepository.GetByIdAsync<ProductCommentEntity>(id);
+        var comment = await _dataRepository.GetAll<ProductCommentEntity>()
+                            .Include(c => c.Product)
+                            .Include(c => c.User)
+                            .FirstOrDefaultAsync(c => c.Id == id);
         if(comment is null)
         {
             throw new Exception("Comment not found");
