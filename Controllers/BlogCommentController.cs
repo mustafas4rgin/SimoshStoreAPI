@@ -8,7 +8,6 @@ namespace MyApp.Namespace
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "admin")]
     public class BlogCommentController : ControllerBase
     {
         private readonly ICommentService _commentService;
@@ -16,7 +15,7 @@ namespace MyApp.Namespace
         {
             _commentService = commentService;
         }
-        [HttpGet]
+        [HttpGet("/api/blogcomments")]
         public async Task<IActionResult> GetBlogComments()
         {
             try
@@ -29,7 +28,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpGet("{id}")]
+        [HttpGet("/api/blogcomments/{id}")]
         public async Task<IActionResult> GetBlogComment(int id)
         {
             try
@@ -42,7 +41,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpDelete("{id}")]
+        [HttpDelete("/api/delete/blogcomment/{id}")]
         public async Task<IActionResult> DeleteBlogComment(int id)
         {
             try
@@ -59,10 +58,20 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpPut("{id}")]
+        [HttpPut("/api/update/blogcomment/{id}")]
         public async Task<IActionResult> UpdateBlogComment([FromBody] BlogCommentDTO comment,[FromRoute] int id)
         {
             var result = await _commentService.UpdateBlogComment(comment,id);
+            if(!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+        [HttpPost("/api/create/blogcomment")]
+        public async Task<IActionResult> CreateBlogComment([FromBody] BlogCommentDTO comment)
+        {
+            var result = await _commentService.CreateBlogComment(comment);
             if(!result.Success)
             {
                 return BadRequest(result.Message);

@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SimoshStore;
 
@@ -13,6 +14,7 @@ public class ProductCommentEntity : EntityBase
     public bool IsConfirmed { get; set; }
 
     // Navigation properties
+    [JsonIgnore]
     public ProductEntity Product { get; set; } = null!;
 
     public UserEntity User { get; set; } = null!;

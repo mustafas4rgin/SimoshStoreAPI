@@ -1,4 +1,5 @@
 ﻿using App.Data.Entities;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
@@ -9,14 +10,52 @@ namespace SimoshStoreAPI;
 public class CommentService : ICommentService
 {
     private readonly IDataRepository _dataRepository;
-    public CommentService(IDataRepository dataRepository)
+    private readonly IValidator<ProductCommentDTO> _productCommentValidator;
+    private readonly IValidator<BlogCommentDTO> _blogCommentValidator;
+    public CommentService(IValidator<ProductCommentDTO> productCommentValidator, IValidator<BlogCommentDTO> blogCommentValidator, IDataRepository dataRepository)
     {
+        _productCommentValidator = productCommentValidator;
+        _blogCommentValidator = blogCommentValidator;
         _dataRepository = dataRepository;
+    }
+    public int GetProductCommentCount()
+    {
+        return _dataRepository.GetAll<ProductCommentEntity>().Count();
+    }
+    public int GetBlogCommentCount()
+    {
+        return _dataRepository.GetAll<BlogCommentEntity>().Count();
+    }
+    public async Task<IServiceResult> ConfirmProductComment(int id)
+    {
+        var comment = await _dataRepository.GetByIdAsync<ProductCommentEntity>(id);
+        if(comment is null)
+        {
+            return new ServiceResult(false, "Comment not found");
+        }
+        if(comment.IsConfirmed)
+        {
+            return new ServiceResult(false, "Comment already confirmed");
+        }
+        comment.IsConfirmed = true;
+        await _dataRepository.UpdateAsync(comment);
+        return new ServiceResult(true, "Comment confirmed successfully");
+    }
+    public async Task<IEnumerable<ProductCommentEntity>> GetProductCommentsByUserId(int userId)
+    {
+        var comments = await _dataRepository.GetAll<ProductCommentEntity>()
+                            .Include(c => c.User)
+                            .Where(c => c.UserId == userId)
+                            .ToListAsync();
+        if(comments is null)
+        {
+            throw new Exception("No comments found");
+        }
+        return comments;
     }
     public async Task<IEnumerable<ProductCommentEntity>> GetProductComments()
     {
         var comments = await _dataRepository.GetAll<ProductCommentEntity>()
-                            .Include(c => c.Product)
                             .Include(c => c.User)
                             .ToListAsync();
         if(comments is null)
@@ -24,6 +63,17 @@ public class CommentService : ICommentService
             throw new Exception("No comments found");
         }
         return comments;
+    }
+    public async Task<IServiceResult> CreateProductCommentAsync(ProductCommentDTO dto)
+    {
+        var validationResult = _productCommentValidator.Validate(dto);
+        if(!validationResult.IsValid)
+        {
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
+        }
+        var comment = MappingHelper.MappingProductCommentEntity(dto);
+        await _dataRepository.AddAsync(comment);
+        return new ServiceResult(true, "Comment created successfully");
     }
     public async Task<ProductCommentEntity> GetProductCommentById(int id)
     {
@@ -49,18 +99,17 @@ public class CommentService : ICommentService
     }
     public async Task<IServiceResult> UpdateProductComment(ProductCommentDTO dto, int id)
     {
-        var comment = await _dataRepository.GetByIdAsync<ProductCommentEntity>(id);
+        var comment = await GetProductCommentById(id);
         if(comment is null)
         {
             return new ServiceResult(false, "Comment not found");
         }
-        comment.Text = dto.Text;
-        if(dto.StarCount > 5 || dto.StarCount < 0)
+        var validationResult = _productCommentValidator.Validate(dto);
+        if(!validationResult.IsValid)
         {
-            return new ServiceResult(false, "Star count must be between 0 and 5");
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
         }
         comment.StarCount = dto.StarCount;
-        comment.IsConfirmed = dto.IsConfirmed;
         await _dataRepository.UpdateAsync(comment);
         return new ServiceResult(true, "Comment updated successfully");
     }
@@ -76,6 +125,23 @@ public class CommentService : ICommentService
             throw new Exception("No comments found");
         }
         return comments;
+    }
+    public async Task<IServiceResult> CreateBlogComment(BlogCommentDTO dto)
+    {
+        var validationResult = _blogCommentValidator.Validate(dto);
+        if(!validationResult.IsValid)
+        {
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
+        }
+        var comment = MappingHelper.MappingBlogCommentEntity(dto);
+        var user = await _dataRepository.GetByIdAsync<UserEntity>(dto.UserId);
+        if(user is null)
+        {
+            return new ServiceResult(false, "User not found");
+        }
+        comment.Name = user.FirstName + " " + user.LastName;
+        await _dataRepository.AddAsync(comment);
+        return new ServiceResult(true, "Comment created successfully");
     }
     public async Task<BlogCommentEntity> GetBlogCommentById(int id)
     {
@@ -102,6 +168,11 @@ public class CommentService : ICommentService
         if(comment is null)
         {
             return new ServiceResult(false, "Comment not found");
+        }
+        var validationResult = _blogCommentValidator.Validate(dto);
+        if(!validationResult.IsValid)
+        {
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
         }
         comment.Comment = dto.Comment;
         comment.BlogId = dto.BlogId;

@@ -8,7 +8,6 @@ namespace MyApp.Namespace
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "admin")]
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -16,18 +15,18 @@ namespace MyApp.Namespace
         {
             _userService = userService;
         }
-        [HttpPost]
-        public async Task<IActionResult> CreateUser([FromBody] UserDTO user)
+        [HttpPost("/api/create/user")]
+        public async Task<IActionResult> CreateUser([FromBody] RegisterDto dto)
         {
             
-            var result = await _userService.CreateUserAsync(user);
+            var result = await _userService.CreateUserAsync(dto);
             if(!result.Success)
             {
                 return BadRequest(result.Message);
             }
-            return Ok(user);
+            return Ok(result.Message);
         }
-        [HttpGet("{id}")]
+        [HttpGet("/api/users/{id}")]
         public async Task<IActionResult> GetUserById(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
@@ -37,7 +36,7 @@ namespace MyApp.Namespace
             }
             return Ok(user);
         }
-        [HttpGet]
+        [HttpGet("/api/users")]
         public async Task<IActionResult> GetUsers()
         {
             var users = await _userService.GetUsersAsync();
@@ -47,7 +46,7 @@ namespace MyApp.Namespace
             }
             return Ok(users);
         }
-        [HttpPut("{id}")]
+        [HttpPut("/api/update/user/{id}")]
         public async Task<IActionResult> UpdateUser(UserDTO user, int id)
         {
             var result = await _userService.UpdateUserAsync(user, id);
@@ -57,7 +56,7 @@ namespace MyApp.Namespace
             }
             return Ok(result.Message);
         }
-        [HttpDelete("{id}")]
+        [HttpDelete("/api/delete/user/{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var result = await _userService.DeleteUserAsync(id);

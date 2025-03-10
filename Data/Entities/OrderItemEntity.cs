@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SimoshStore;
 
@@ -12,6 +13,7 @@ public class OrderItemEntity : EntityBase
     public decimal UnitPrice { get; set; }
 
     // Navigation properties
+    [JsonIgnore]
     public OrderEntity Order { get; set; } = null!;
 
     public ProductEntity Product { get; set; } = null!;

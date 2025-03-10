@@ -1,6 +1,8 @@
 ﻿using System.Security.Claims;
 using App.Data.Entities;
+using FluentValidation;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SimoshStore;
 
@@ -10,9 +12,11 @@ public class UserService : IUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IDataRepository _dataRepository;
+    private readonly IValidator<RegisterDto> _validator;
 
-    public UserService(IHttpContextAccessor httpContextAccessor, IDataRepository dataRepository)
+    public UserService(IValidator<RegisterDto> validator, IHttpContextAccessor httpContextAccessor, IDataRepository dataRepository)
     {
+        _validator = validator;
         _httpContextAccessor = httpContextAccessor;
         _dataRepository = dataRepository;
     }
@@ -58,7 +62,8 @@ public class UserService : IUserService
     }
     public async Task<UserEntity> GetUserByEmailAsync(string email)
     {
-        var user = await _dataRepository.GetAll<UserEntity>().Where(x => x.Email == email).FirstOrDefaultAsync();
+        var user = await _dataRepository.GetAll<UserEntity>()
+                                        .Include(U => U.Role).Where(x => x.Email == email).FirstOrDefaultAsync();
         if (user is null)
         {
             throw new Exception("User not found");
@@ -68,15 +73,10 @@ public class UserService : IUserService
     public async Task<IServiceResult> UpdateUserAsync(UserDTO dto, int id)
     {
         var user = await GetUserByIdAsync(id);
-        user.Address = dto.Address;
         user.Email = dto.Email;
         user.FirstName = dto.FirstName;
         user.LastName = dto.LastName;
         user.Phone = dto.Phone;
-        user.RoleId = dto.RoleId;
-        HashingHelper.CreatePasswordHash(dto.Password, out var passwordHash, out var passwordSalt);
-        user.PasswordHash = passwordHash;
-        user.PasswordSalt = passwordSalt;
         await _dataRepository.UpdateAsync(user);
         return new ServiceResult(true, "User updated successfully");
 
@@ -87,9 +87,19 @@ public class UserService : IUserService
         await _dataRepository.DeleteAsync<UserEntity>(id);
         return new ServiceResult(true, "User deleted successfully");
     }
-    public async Task<IServiceResult> CreateUserAsync(UserDTO dto)
+    public async Task<IServiceResult> CreateUserAsync(RegisterDto dto)
     {
-        var user = MappingHelper.MappingUserEntity(dto);
+        var validationResult = _validator.Validate(dto);
+        if (!validationResult.IsValid)
+        {
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
+        }
+        var existingUser = await _dataRepository.GetAll<UserEntity>().FirstOrDefaultAsync(x => x.Email == dto.Email||x.Phone == dto.Phone);
+        if (existingUser != null)
+        {
+            return new ServiceResult(false, "User already exists");
+        }
+        var user = MappingHelper.RegisterDtoToUserEntity(dto);
         await _dataRepository.AddAsync(user);
         return new ServiceResult(true, "User created successfully");
     }

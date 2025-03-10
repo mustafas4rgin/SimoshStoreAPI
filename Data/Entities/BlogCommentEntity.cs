@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Routing.Tree;
+﻿using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Routing.Tree;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SimoshStore;
@@ -14,6 +15,7 @@ public class BlogCommentEntity : EntityBase
     public bool IsApproved { get; set; } = true;
 
     // Navigation properties
+    [JsonIgnore]
     public BlogEntity Blog { get; set; } = null!;
 }
 

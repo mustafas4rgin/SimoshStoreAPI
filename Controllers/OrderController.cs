@@ -7,7 +7,6 @@ using SimoshStoreAPI;
 namespace MyApp.Namespace
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "admin")]
     [ApiController]
     public class OrderController : ControllerBase
     {
@@ -16,7 +15,53 @@ namespace MyApp.Namespace
         {
             _orderService = orderService;
         }
-        [HttpGet]
+        [HttpPost("/api/order-confirmation/{orderId}")]
+        public async Task<IActionResult> OrderConfirmAsync(int orderId,[FromBody]int userId)
+        {
+            var order = await _orderService.CheckOrderById(orderId, userId);
+            if(order.Id == 0)
+            {
+                return NotFound();
+            }
+
+            return Ok(order);
+        }
+        
+        [HttpPost("/api/create/order")]
+        public async Task<IActionResult> CreateOrder([FromBody] OrderDTO dto)
+        {
+            try
+            {
+                var result = await _orderService.CreateOrderAsync(dto);
+                if(!result.Success)
+                {
+                    return BadRequest(result.Message);
+                }
+                var order = await _orderService.GetOrderByCodeAsync(dto.OrderCode);
+                return Ok(order);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+        [HttpGet("/api/order-list/{id}")]
+        public async Task<IActionResult> GetOrderList(int id)
+        {
+            try
+            {
+                var orders = await _orderService.GetUsersOrdersAsync(id);
+                return Ok(new OrderListViewModel
+                {
+                    orders = orders.ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+        [HttpGet("/api/orders")]
         public async Task<IActionResult> GetOrders()
         {
             try
@@ -29,7 +74,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpPut("/order/update/{id}")]
+        [HttpPut("/api/update/order/{id}")]
         public async Task<IActionResult> UpdateOrder([FromBody] OrderDTO order,[FromRoute] int id)
         {
             try 
@@ -46,7 +91,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpDelete("/order/delete/{id}")]
+        [HttpDelete("/api/delete/order/{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
             try 
@@ -63,7 +108,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpGet("/order/{id}")]
+        [HttpGet("/api/orders/{id}")]
         public async Task<IActionResult> GetOrderById(int id)
         {
             try 
@@ -76,5 +121,6 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
+        
     }
 }

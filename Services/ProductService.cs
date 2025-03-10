@@ -1,6 +1,7 @@
 ﻿namespace SimoshStoreAPI;
 
 using App.Data.Entities;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using SimoshStore;
@@ -8,9 +9,67 @@ using SimoshStore;
 public class ProductService : IProductService
 {
     private readonly IDataRepository _Repository;
-    public ProductService(IDataRepository repository)
+    private readonly IValidator<ProductDTO> _Validator;
+    public ProductService(ICategoryService categoryService, IValidator<ProductDTO> validator, IDataRepository repository)
     {
+        _Validator = validator;
         _Repository = repository;
+    }
+    public async Task<SearchBarViewModel> SearchProduct()
+    {
+        var popularProducts = await _Repository.GetAll<ProductEntity>()
+                            .Include(P => P.Discount).OrderBy(P => P.Comments.Count()).ToListAsync();
+
+        var categories = await _Repository.GetAll<CategoryEntity>().ToListAsync();
+
+        if (popularProducts.Count() <= 0 || categories.Count() <= 0)
+        {
+            return new SearchBarViewModel();
+        }
+
+        return new SearchBarViewModel
+        {
+            Categories = categories,
+            Products = popularProducts,
+        };
+    }
+    public async Task<UpdateProductDTO> AdminUpdate(int id)
+    {
+        var product = await _Repository.GetAll<ProductEntity>()
+                            .Include(P => P.Discount)
+                            //.Include(P => P.Images)
+                            .FirstOrDefaultAsync(P => P.Id == id);
+
+        if (product == null)
+        {
+            return new UpdateProductDTO();
+        }
+
+        var categories = await _Repository.GetAll<CategoryEntity>().ToListAsync();
+
+        var discounts = await _Repository.GetAll<DiscountEntity>().ToListAsync();
+
+        return new UpdateProductDTO
+        {
+            Categories = categories,
+            Discounts = discounts,
+            Product = product
+        };
+    }
+    public async Task<IEnumerable<ProductEntity>> PopularProductsAsync(int? take)
+    {
+        var popularProducts = await _Repository.GetAll<ProductEntity>()
+                                .OrderBy(P => P.Comments.Count)
+                                .Include(P => P.Discount)
+                                .Include(P => P.Comments)
+                                .ToListAsync();
+
+        if (take.HasValue)
+        {
+            popularProducts = popularProducts.Take(take.Value).ToList();
+        }
+
+        return popularProducts;
     }
     public async Task<IServiceResult> UpdateProductAsync(ProductDTO dto, int id)
     {
@@ -18,6 +77,11 @@ public class ProductService : IProductService
         if (product is null)
         {
             return new ServiceResult(false, "Product not found");
+        }
+        var validationResult = _Validator.Validate(dto);
+        if (!validationResult.IsValid)
+        {
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
         }
         product.Name = dto.Name;
         product.Price = dto.Price;
@@ -29,27 +93,77 @@ public class ProductService : IProductService
         await _Repository.UpdateAsync(product);
         return new ServiceResult(true, "Product updated successfully");
     }
-    public async Task<ProductEntity> GetProductByIdAsync(int id)
+    public async Task<ProductDetailsViewModel> GetProductByIdAsync(int id)
     {
-        var product = await _Repository.GetByIdAsync<ProductEntity>(id);
+        var product = await _Repository.GetAll<ProductEntity>()
+                            .Include(p => p.Category)
+                            .Include(p => p.Comments)
+                            .ThenInclude(c => c.User)
+                            //.Include(p => p.Images)
+                            .FirstOrDefaultAsync(p => p.Id == id);
         if (product is null)
         {
             throw new Exception("Product not found");
         }
-        return product;
+        int productStar = 0;
+        if (product.Comments.Count > 0)
+        {
+            productStar = product.Comments.Sum(c => c.StarCount) / product.Comments.Count;
+        }
+        var similarProducts = await _Repository.GetAll<ProductEntity>()
+                            .Include(p => p.Category)
+                            .Include(p => p.Comments)
+                            .ThenInclude(c => c.User)
+                            .Include(p => p.Discount)
+                            //.Include(p => p.Images)
+                            .Where(p => p.CategoryId == product.CategoryId)
+                            .ToListAsync();
+        if (similarProducts.Count <= 0)
+        {
+            throw new Exception("No similar products found");
+        }
+
+        var relatedProducts = await _Repository.GetAll<ProductEntity>()
+                            .Include(p => p.Category)
+                            .Include(p => p.Comments)
+                            .ThenInclude(c => c.User)
+                            .Include(p => p.Discount)
+                            //.Include(p => p.Images)
+                            .Where(p => p.CategoryId != product.CategoryId)
+                            .ToListAsync();
+        if (relatedProducts.Count <= 0)
+        {
+            throw new Exception("No related products found");
+        }
+
+        return new ProductDetailsViewModel
+        {
+            Star = productStar,
+            Product = product,
+            SimilarProducts = similarProducts,
+            RelatedProducts = relatedProducts
+        };
     }
     public async Task<IEnumerable<ProductEntity>> GetProductsAsync()
     {
-        var products = await _Repository.GetAll<ProductEntity>().
-                            Include(P=>P.Category).
-                            Include(P=>P.Discount).
-                            Include(P=>P.Images).ToListAsync();
-        if (products == null)
+        var products = await _Repository.GetAll<ProductEntity>()
+            .Include(p => p.Discount)
+            .Include(p => p.Category)
+            .Include(p => p.Comments)
+            .ThenInclude(c => c.User)
+            .ToListAsync();
+
+
+        if (!products.Any())
         {
             throw new Exception("No products found");
         }
+
         return products;
     }
+
+
+
     public async Task<IServiceResult> DeleteProductAsync(int id)
     {
         var product = await _Repository.GetByIdAsync<ProductEntity>(id);
@@ -62,62 +176,41 @@ public class ProductService : IProductService
     }
     public async Task<IServiceResult> CreateProductAsync(ProductDTO dto)
     {
+        var validationResult = _Validator.Validate(dto);
+        if (!validationResult.IsValid)
+        {
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
+        }
         var product = MappingHelper.MappingProduct(dto);
-        product.SellerId = 2;
-        if (product is null)
-        {
-            return new ServiceResult(false, "Product is null");
-        }
-        if (product.Name is null)
-        {
-            return new ServiceResult(false, "Product name is null");
-        }
-        if (product.Price <= 0)
-        {
-            return new ServiceResult(false, "Product price is invalid");
-        }
-        if (product.Description is null)
-        {
-            return new ServiceResult(false, "Product description is null");
-        }
-        if (product.StockAmount <= 0)
-        {
-            return new ServiceResult(false, "Product stock amount is invalid");
-        }
-        if(product.CategoryId <= 0)
-        {
-            return new ServiceResult(false, "Product category is null");
-        }
-        var category = await _Repository.GetByIdAsync<CategoryEntity>(product.CategoryId);
-        if (category is not null)
-        {
-            product.Category = category;
-        }
-        var comments = await _Repository.GetAll<ProductCommentEntity>().Where(c => c.ProductId == product.Id).ToListAsync();
-        if(comments is not null)
-        {
-            product.Comments = comments;
-        }
-        if(product.DiscountId is not null)
-        {
-            var discount = await _Repository.GetByIdAsync<DiscountEntity>(product.DiscountId.Value);
-            if(discount is not null)
-            {
-                product.Discount = discount;
-            }
-        }
+
         var images = _Repository.GetAll<ProductImageEntity>().Where(i => i.ProductId == product.Id).ToList();
-        if(images is null)
+        if (images is null)
         {
             await _Repository.AddAsync(
                 new ProductImageEntity
                 {
                     ProductId = product.Id,
-                     Url = "default.jpg"
+                    Url = "default.jpg"
                 }
             );
-        };
+        }
+        ;
         await _Repository.AddAsync(product);
         return new ServiceResult(true, "Product created successfully");
+    }
+    public async Task<IEnumerable<ProductEntity>> BestProductsAsync()
+    {
+        var products = await _Repository.GetAll<ProductEntity>()
+            .Include(p => p.Category)
+            .Include(p => p.Discount)
+        //  .Include(p => p.Images)
+            .OrderByDescending(p => p.StockAmount)
+            .Take(7)
+            .ToListAsync();
+        if (!products.Any())
+        {
+            throw new Exception("No products found");
+        }
+        return products;
     }
 }

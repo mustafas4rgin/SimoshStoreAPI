@@ -14,6 +14,4 @@ public class RegisterDto
     public string Email { get; set; } = default!;
     [DataType(DataType.Password)]
     public string Password { get; set; } = default!;
-    [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
-    public string PasswordConfirm { get; set; } = default!;
 }

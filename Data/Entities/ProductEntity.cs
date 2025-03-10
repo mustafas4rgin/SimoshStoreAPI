@@ -23,7 +23,7 @@ public class ProductEntity : EntityBase, IHasEnabled
     public DiscountEntity? Discount { get; set; }
 
     public ICollection<ProductImageEntity> Images { get; set; } = null!;
-    public ICollection<ProductCommentEntity> Comments { get; set; } = null!;
+    public ICollection<ProductCommentEntity> Comments { get; set; } = new List<ProductCommentEntity>(); 
 }
 
 internal class ProductEntityConfiguration : IEntityTypeConfiguration<ProductEntity>
@@ -55,6 +55,15 @@ internal class ProductEntityConfiguration : IEntityTypeConfiguration<ProductEnti
             .HasForeignKey(d => d.DiscountId)
             .OnDelete(DeleteBehavior.SetNull);
 
+        builder.HasMany(d => d.Images)
+            .WithOne(p => p.Product)
+            .HasForeignKey(d => d.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasMany(d => d.Comments)
+            .WithOne(p => p.Product)
+            .HasForeignKey(d => d.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
 
 
 

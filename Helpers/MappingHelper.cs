@@ -1,10 +1,26 @@
-﻿using App.Data.Entities;
+﻿using System.Data;
+using App.Data.Entities;
 using SimoshStoreAPI;
 
 namespace SimoshStore;
 
 public class MappingHelper
 {
+    public static UserEntity RegisterDtoToUserEntity(RegisterDto dto)
+    {
+        HashingHelper.CreatePasswordHash(dto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+        return new UserEntity
+        {
+            FirstName = dto.FirstName,
+            LastName = dto.LastName,
+            Phone = dto.Phone,
+            Email = dto.Email,
+            PasswordHash = passwordHash,
+            PasswordSalt = passwordSalt,
+            ResetToken = "",
+            ResetTokenExpires = DateTime.UtcNow
+        };
+    }
     public static BlogCommentEntity MappingBlogCommentEntity(BlogCommentDTO dto)
     {
         return new BlogCommentEntity
@@ -21,30 +37,16 @@ public class MappingHelper
         {
             Text = dto.Text,
             StarCount = dto.StarCount,
-            IsConfirmed = dto.IsConfirmed
+            ProductId = dto.ProductId,
+            UserId = dto.UserId,
+            IsConfirmed = false
         };
     }
-    public static UserEntity MappingUserEntity(UserDTO dto)
-    {
-        HashingHelper.CreatePasswordHash(dto.Password, out byte[] passwordHash, out byte[] passwordSalt);
-        return new UserEntity
-        {
-            Address = dto.Address,
-            Email = dto.Email,
-            FirstName = dto.FirstName,
-            PasswordHash = passwordHash,
-            PasswordSalt = passwordSalt,
-            Phone = dto.Phone,
-            RoleId = dto.RoleId,
-            LastName = dto.LastName
 
-        };
-    }
     public static OrderEntity MappingOrderEntity(OrderDTO dto)
     {
         return new OrderEntity
         {
-            Address = dto.Address,
             OrderCode = dto.OrderCode,
             UserId = dto.UserId
         };

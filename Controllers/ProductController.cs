@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using App.Data.Entities;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,6 @@ namespace MyApp.Namespace
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "admin")]
     public class ProductController : ControllerBase
     {
         private readonly IProductService _productService;
@@ -19,7 +19,34 @@ namespace MyApp.Namespace
         {
             _productService = productService;
         }
-        [HttpGet]
+        [HttpGet("/api/search-product")]
+        public async Task<IActionResult> Search()
+        {
+            var model = await _productService.SearchProduct();
+
+            return Ok(model);
+        }
+        [HttpGet("/api/update-admin/product/{id}")]
+        public async Task<IActionResult> AdminUpdateProduct(int id)
+        {
+            var dto = await _productService.AdminUpdate(id);
+
+            return Ok(dto);
+        }
+        [HttpGet("/api/popularproducts")]
+        public async Task<IActionResult> PopularProducts([FromQuery]int? take)
+        {
+            var popularProducts = await _productService.PopularProductsAsync(take);
+            return Ok(popularProducts);
+        }
+
+        [HttpGet("/api/bestproducts")]
+        public async Task<IActionResult> BestProducts()
+        {
+            var products = await _productService.BestProductsAsync();
+            return Ok(products);
+        }
+        [HttpGet("/api/products")]
         public async Task<IActionResult> GetProducts()
         {
             try 
@@ -33,9 +60,8 @@ namespace MyApp.Namespace
             }
         }
 
-        
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateProduct([FromForm] ProductDTO product)
+        [HttpPost("/api/create/product")]
+        public async Task<IActionResult> CreateProduct([FromBody] ProductDTO product)
         {
             var result = await _productService.CreateProductAsync(product);
             if(!result.Success)
@@ -44,8 +70,7 @@ namespace MyApp.Namespace
             }
             return Ok(product);
         }
-        
-        [HttpDelete("/product/delete/{id}")]
+        [HttpDelete("/api/delete/product/{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
             var result = await _productService.DeleteProductAsync(id);
@@ -55,7 +80,7 @@ namespace MyApp.Namespace
             }
             return Ok(result.Message);
         }
-        [HttpPut("/product/update/{id}")]
+        [HttpPut("/api/update/product/{id}")]
         public async Task<IActionResult> UpdateProduct([FromBody] ProductDTO product,[FromRoute] int id)
         {
             var result = await _productService.UpdateProductAsync(product,id);
@@ -65,15 +90,25 @@ namespace MyApp.Namespace
             }
             return Ok(product);
         }
-        [HttpGet("/product/{id}")]
+        [HttpGet("/api/products/{id}")]
         public async Task<IActionResult> GetProduct(int id)
         {
-            var product = await _productService.GetProductByIdAsync(id);
-            if(product is null)
+            var productDetailsViewModel = await _productService.GetProductByIdAsync(id);
+            if(productDetailsViewModel is null)
             {
                 return NotFound("Product not found");
             }
-            return Ok(product);
+            return Ok(productDetailsViewModel);
+        }
+        [HttpGet("/api/product-list")]
+        public async Task<IActionResult> GetProductList()
+        {
+            var products = await _productService.GetProductsAsync();
+
+            return Ok(new ListProductsViewModel
+            {
+                productEntities = products.ToList()
+            });
         }
     }
 }

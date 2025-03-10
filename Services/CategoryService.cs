@@ -1,4 +1,5 @@
 ﻿using App.Data.Entities;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SimoshStore;
 
@@ -7,16 +8,18 @@ namespace SimoshStoreAPI;
 public class CategoryService : ICategoryService
 {
     private readonly IDataRepository _Repository;
-    public CategoryService(IDataRepository repository)
+    private readonly IValidator<CategoryDTO> _validator;
+    public CategoryService(IValidator<CategoryDTO> validator, IDataRepository repository)
     {
+        _validator = validator;
         _Repository = repository;
     }
     public async Task<IServiceResult> CreateCategoryAsync(CategoryDTO dto)
     {
-        var validationResult = Validator.Validate(dto);
-        if (!validationResult.Success)
+        var validationResult = _validator.Validate(dto);
+        if (!validationResult.IsValid)
         {
-            return validationResult;
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
         }
         var category = MappingHelper.MappingCategory(dto);
         await _Repository.AddAsync(category);
@@ -53,6 +56,11 @@ public class CategoryService : ICategoryService
         {
             return new ServiceResult(false, "Category not found");
         }
+        var validationResult = _validator.Validate(dto);
+        if (!validationResult.IsValid)
+        {
+            return new ServiceResult(false, validationResult.Errors.First().ErrorMessage);
+        }
         category.Name = dto.Name;
         await _Repository.UpdateAsync(category);
         return new ServiceResult(true, "Category updated successfully");
@@ -65,5 +73,23 @@ public class CategoryService : ICategoryService
             throw new Exception("Category not found");
         }
         return category;
+    }
+    public async Task<BlogCategoryEntity> GetBlogCategoryByIdAsync(int id)
+    {
+        var blogCategory = await _Repository.GetByIdAsync<BlogCategoryEntity>(id);
+        if (blogCategory is null)
+        {
+            throw new NullReferenceException($"There is no blog category with id:{id} ");
+        }
+        return blogCategory;
+    }
+    public async Task<IEnumerable<BlogCategoryEntity>> GetBlogCategories()
+    {
+        var blogCategories = await _Repository.GetAll<BlogCategoryEntity>().ToListAsync();
+        if (blogCategories.Count == 0)
+        {
+            throw new NullReferenceException("There is no blog category.");
+        }
+        return blogCategories;
     }
 }

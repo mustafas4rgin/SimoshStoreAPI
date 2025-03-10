@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SimoshStore;
 using SimoshStoreAPI;
 
 namespace MyApp.Namespace
@@ -14,7 +15,7 @@ namespace MyApp.Namespace
         {
             _contactFormService = contactFormService;
         }
-        [HttpGet]
+        [HttpGet("/api/contactforms")]
         public async Task<IActionResult> GetContactForms()
         {
             try
@@ -27,7 +28,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpDelete("/contactform/delete/{id}")]
+        [HttpDelete("/api/delete/contactform/{id}")]
         public async Task<IActionResult> DeleteContactForm(int id)
         {
             var result = await _contactFormService.DeleteContactFormAsync(id);
@@ -37,5 +38,26 @@ namespace MyApp.Namespace
             }
             return Ok(result.Message);
         }
+        [HttpPost("/api/create/contactform")]
+        public async Task<IActionResult> CreateContactForm([FromBody]ContactDTO model)
+        {
+            var result = await _contactFormService.CreateContactFormAsync(model);
+            if(!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
+        }
+        [HttpGet("/api/contactforms/{id}")]
+        public async Task<IActionResult> GetContactForm(int id)
+        {
+            var contactForm = await _contactFormService.GetContactFormAsync(id);
+            if(contactForm == null)
+            {
+                return NotFound();
+            }
+            return Ok(contactForm);
+        }
+
     }
 }

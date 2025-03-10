@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/SimoshStoreAPI.csproj": {}
+    "/Users/s4rgin/Desktop/SimoshApp/SimoshStoreAPI/SimoshStoreAPI.csproj": {}
   },
   "projects": {
-    "/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/SimoshStoreAPI.csproj": {
+    "/Users/s4rgin/Desktop/SimoshApp/SimoshStoreAPI/SimoshStoreAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/SimoshStoreAPI.csproj",
+        "projectUniqueName": "/Users/s4rgin/Desktop/SimoshApp/SimoshStoreAPI/SimoshStoreAPI.csproj",
         "projectName": "SimoshStoreAPI",
-        "projectPath": "/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/SimoshStoreAPI.csproj",
+        "projectPath": "/Users/s4rgin/Desktop/SimoshApp/SimoshStoreAPI/SimoshStoreAPI.csproj",
         "packagesPath": "/Users/s4rgin/.nuget/packages/",
-        "outputPath": "/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/obj/",
+        "outputPath": "/Users/s4rgin/Desktop/SimoshApp/SimoshStoreAPI/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/s4rgin/.nuget/NuGet/NuGet.Config"
@@ -44,6 +44,14 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "FluentValidation": {
+              "target": "Package",
+              "version": "[11.11.0, )"
+            },
+            "FluentValidation.AspNetCore": {
+              "target": "Package",
+              "version": "[11.3.0, )"
+            },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
               "version": "[9.0.2, )"

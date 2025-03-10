@@ -7,7 +7,6 @@ using SimoshStoreAPI;
 namespace MyApp.Namespace
 {
     [Route("api/[controller]")]
-    [Authorize(Roles = "admin")]
     [ApiController]
     public class ProductCommentController : ControllerBase
     {
@@ -16,7 +15,37 @@ namespace MyApp.Namespace
         {
             _commentService = commentService;
         }
-        [HttpGet]
+        [HttpGet("/api/confirm-comment/{id}")]
+        public async Task<IActionResult> ConfirmProductComment(int id)
+        {
+            try
+            {
+                var result = await _commentService.ConfirmProductComment(id);
+                if (!result.Success)
+                {
+                    return BadRequest(result.Message);
+                }
+                return Ok(result.Message);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+        [HttpGet("/api/productcomments/user/{userId}")]
+        public async Task<IActionResult> GetProductCommentsByUserId(int userId)
+        {
+            try
+            {
+                var comments = await _commentService.GetProductCommentsByUserId(userId);
+                return Ok(comments);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+        [HttpGet("/api/productcomments")]
         public async Task<IActionResult> GetProductComments()
         {
             try
@@ -29,7 +58,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpGet("{id}")]
+        [HttpGet("/api/productcomments/{id}")]
         public async Task<IActionResult> GetProductComment(int id)
         {
             try
@@ -42,7 +71,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpDelete("{id}")]
+        [HttpDelete("/api/delete/productcomment/{id}")]
         public async Task<IActionResult> DeleteProductComment(int id)
         {
             try
@@ -59,7 +88,7 @@ namespace MyApp.Namespace
                 return NotFound(ex.Message);
             }
         }
-        [HttpPut("{id}")]
+        [HttpPut("/api/update/productcomment{id}")]
         public async Task<IActionResult> UpdateProductCommentEntity(ProductCommentDTO dto, int id)
         {
             try
@@ -75,6 +104,16 @@ namespace MyApp.Namespace
             {
                 return NotFound(ex.Message);
             }
+        }
+        [HttpPost("/api/create/productcomment")]
+        public async Task<IActionResult> CreateProductComment([FromBody] ProductCommentDTO dto)
+        {
+            var result = await _commentService.CreateProductCommentAsync(dto);
+            if (!result.Success)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result.Message);
         }
     }
 }

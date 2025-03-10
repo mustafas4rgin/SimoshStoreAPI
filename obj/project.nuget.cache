@@ -1,9 +1,12 @@
 {
   "version": 2,
-  "dgSpecHash": "cRrSW4tWnQA=",
+  "dgSpecHash": "aTmjyIwJBqs=",
   "success": true,
-  "projectFilePath": "/Users/s4rgin/Documents/GitHub/SimoshStoreAPI/SimoshStoreAPI.csproj",
+  "projectFilePath": "/Users/s4rgin/Desktop/SimoshApp/SimoshStoreAPI/SimoshStoreAPI.csproj",
   "expectedPackageFiles": [
+    "/Users/s4rgin/.nuget/packages/fluentvalidation/11.11.0/fluentvalidation.11.11.0.nupkg.sha512",
+    "/Users/s4rgin/.nuget/packages/fluentvalidation.aspnetcore/11.3.0/fluentvalidation.aspnetcore.11.3.0.nupkg.sha512",
+    "/Users/s4rgin/.nuget/packages/fluentvalidation.dependencyinjectionextensions/11.5.1/fluentvalidation.dependencyinjectionextensions.11.5.1.nupkg.sha512",
     "/Users/s4rgin/.nuget/packages/microsoft.aspnetcore.authentication.jwtbearer/9.0.2/microsoft.aspnetcore.authentication.jwtbearer.9.0.2.nupkg.sha512",
     "/Users/s4rgin/.nuget/packages/microsoft.aspnetcore.openapi/9.0.1/microsoft.aspnetcore.openapi.9.0.1.nupkg.sha512",
     "/Users/s4rgin/.nuget/packages/microsoft.entityframeworkcore/9.0.2/microsoft.entityframeworkcore.9.0.2.nupkg.sha512",
